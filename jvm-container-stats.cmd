@@ -1,0 +1,1 @@
+docker run -ti --rm --memory=256m --cpus=2 adoptopenjdk/openjdk11:jdk-11.0.9.1_1-centos java -XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsFinal -XX:+UseParallelGC -XX:NativeMemoryTracking=summary -XX:+PrintNMTStatistics
