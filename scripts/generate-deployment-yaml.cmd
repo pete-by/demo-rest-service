@@ -1,0 +1,1 @@
+kubectl create deployment demo-rest-service --image=peteby/demo-rest-service --dry-run -oyaml > ../k8s/deployment.yaml

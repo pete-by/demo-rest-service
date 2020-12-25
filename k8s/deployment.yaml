@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: demo-rest-service
+  name: demo-rest-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-rest-service
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: demo-rest-service
+    spec:
+      containers:
+      - image: peteby/demo-rest-service
+        name: demo-rest-service
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        # If the hook doesn’t receive UP status for readiness,
+        # then traffic won’t be routed to that port. The pod won’t be restart.
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
+          periodSeconds: 5
+          failureThreshold: 3
+        # If HTTP GET request to liveness doesn’t receive UP status in the timing conditions above,
+        # the pod will restart.
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness # /alive
+            port: http
+          initialDelaySeconds: 10 # means that send the GET request after waiting 10 seconds.
+          timeoutSeconds: 3 # means that if there is no response within 3 seconds, time out.
+          periodSeconds: 5 # means that check by sending this request every 5 seconds.
+          failureThreshold: 3 # means that let it fail 3 times.
+        lifecycle:
+          preStop:
+            httpGet:
+              path: /stopping
+              port: http
+        resources: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 15
+status: {}

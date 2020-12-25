@@ -1,32 +1,27 @@
 package com.axamit.springboot.demo.demorestservice;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.ClassPathResource;
 
 @SpringBootApplication
 public class DemoRestServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DemoRestServiceApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DemoRestServiceApplication.class, args);
+    }
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer placeholderConfigurer() {
+        PropertySourcesPlaceholderConfigurer propsConfig
+                = new PropertySourcesPlaceholderConfigurer();
+        propsConfig.setLocation(new ClassPathResource("git.properties"));
+        propsConfig.setIgnoreResourceNotFound(true);
+        propsConfig.setIgnoreUnresolvablePlaceholders(true);
+        return propsConfig;
+    }
 
 }
 
-@RestController
-class HelloController {
-
-	private final String greeting;
-
-	HelloController(@Value("${greeting:Hi}") String greeting) {
-		this.greeting = greeting;
-	}
-
-	@GetMapping("/hello")
-	String hello(String name) {
-		return greeting + ", " + name;
-	}
-
-}

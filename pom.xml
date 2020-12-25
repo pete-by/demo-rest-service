@@ -22,6 +22,12 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+			<version>1</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
@@ -44,6 +50,16 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
+					<include>**/*.xml</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -56,12 +72,13 @@
 				<version>2.7.0</version>
 				<configuration>
 					<from>
-						<image>adoptopenjdk/openjdk11:jdk-11.0.9.1_1-centos</image>
+						<!--image>adoptopenjdk/openjdk11:jdk-11.0.9.1_1-centos</image-->
+						<image>gcr.io/distroless/java:${java.version}</image>
 					</from>
 					<to>
 						<image>${image.path}</image>
 						<tags>
-							<tag>${git-commit-id.commit.id.abbrev}</tag>
+							<tag>${git.commit.id.abbrev}</tag>
 						</tags>
 					</to>
 					<container>
@@ -89,11 +106,21 @@
 					</execution>
 				</executions>
 				<configuration>
+					<!-- To not check to remote repos -->
+					<offline>true</offline>
+					<!-- When working with project with submodules, setting this flag makes sure, that plugin works only for parent repository -->
+					<runOnlyOnce>true</runOnlyOnce>
+					<!-- To allow using git props in pom.xml -->
+					<injectAllReactorProjects>true</injectAllReactorProjects>
 					<failOnNoGitDirectory>false</failOnNoGitDirectory>
 					<generateGitPropertiesFile>true</generateGitPropertiesFile>
 					<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+					<!-- <format>json</format> -->
 					<excludeProperties>
+						<!-- hide personal info -->
 						<excludeProperty>git.user.*</excludeProperty>
+						<excludeProperty>git.commit.user.*</excludeProperty>
+						<excludeProperty>git.build.user.*</excludeProperty>
 					</excludeProperties>
 				</configuration>
 			</plugin>

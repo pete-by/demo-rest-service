@@ -1,0 +1,21 @@
+apiVersion: skaffold/v2beta10
+kind: Config
+metadata:
+  name: demo-rest-service
+build:
+  artifacts:
+  - image: peteby/demo-rest-service
+    context: .
+    jib:
+      project: com.axamit.springboot:demo-rest-service
+deploy:
+  kubectl:
+    manifests:
+    - k8s/deployment.yaml
+    - k8s/services/clusterip-service.yaml
+# Port forwarding section is optional
+portForward:
+  - resourceType: service
+    resourceName: demo-rest-service
+    port: 8080
+    localPort: 80

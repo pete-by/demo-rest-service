@@ -1,0 +1,1 @@
+kubectl port-forward service/demo-rest-service 80:8080

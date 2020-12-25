@@ -1,0 +1,1 @@
+kubectl create service clusterip demo-rest-service --tcp 8080:8080 --dry-run -oyaml > ../k8s/services/clusterip-service.yaml
