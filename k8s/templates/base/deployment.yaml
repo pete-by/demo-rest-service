@@ -1,25 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
-    app: demo-rest-service
-  name: demo-rest-service
+    app: {{ .Values.appName }}
+  name: {{ .Values.appName }}
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: demo-rest-service
+      app: {{ .Values.appName }}
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
-        app: demo-rest-service
+        app: {{ .Values.appName }}
     spec:
       containers:
-      - image: peteby/demo-rest-service
-        name: demo-rest-service
+      - image: peteby/{{ .Values.appName }}
+        name: {{ .Values.appName }}
+        env:
+          - name: env
+            value: dev
         ports:
           - name: http
             containerPort: 8080

@@ -20,6 +20,8 @@ class HelloController {
     @Inject
     private ApplicationAvailability applicationAvailability;
 
+    private @Value("${env}") String env;
+
     private final String greeting;
 
     HelloController(@Value("${greeting:Hi}") String greeting) {
@@ -41,7 +43,7 @@ class HelloController {
     @GetMapping("/alive")
     String alive() {
         // lets simulate unavailability
-        if (!(isAlive())) {
+        if (!isAlive()) {
             throw new UnavailableException("Service is unavailable");
         }
         return "OK";
