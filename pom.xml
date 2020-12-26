@@ -10,11 +10,14 @@
 	</parent>
 	<groupId>com.axamit.springboot</groupId>
 	<artifactId>demo-rest-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}+${sha1}</version> <!-- cant use ${git.commit.id.abbrev} -->
 	<name>demo-rest-service</name>
 	<description>Demo project for Spring Boot Rest Service with Kubernetes</description>
 
 	<properties>
+		<!-- TODO: jgitver-maven-plugin -->
+		<revision>1.0.0</revision>
+		<sha1>local</sha1> <!-- should be overrode by build agent -->
 		<java.version>11</java.version>
 		<image.path>peteby/${project.artifactId}</image.path>
 	</properties>
@@ -125,7 +128,155 @@
 					</excludeProperties>
 				</configuration>
 			</plugin>
+
+			<!--
+				Used to create (and publish) helm package
+			    Note: currently uses Helm binary through system path
+			-->
+
+			<!-- Used to render helm templates for Kustomize -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>compile</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<executable>helm</executable>
+					<workingDirectory>${project.basedir}/helm</workingDirectory>
+					<arguments>
+						<argument>template</argument>
+						<argument>--debug</argument>
+						<argument>.</argument>
+						<argument>--output-dir</argument>
+						<argument>../k8s</argument>
+					</arguments>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+			</plugin>
+
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>env</name>
+					<value>dev</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.kiwigrid</groupId>
+						<artifactId>helm-maven-plugin</artifactId>
+						<version>5.6</version>
+						<configuration>
+							<chartDirectory>${project.basedir}/helm</chartDirectory>
+							<chartVersion>${project.version}</chartVersion>
+							<!-- This is the related section to use local binary with auto-detection disabled. -->
+							<useLocalHelmBinary>true</useLocalHelmBinary>
+							<skipInit>true</skipInit>
+							<skipDryRun>true</skipDryRun>
+							<skipUpload>true</skipUpload>
+							<settings>${settings}</settings>
+						</configuration>
+						<executions>
+							<execution>
+								<id>package.${env}</id>
+								<goals>
+									<goal>package</goal>
+								</goals>
+								<phase>package</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+			<distributionManagement>
+				<repository>
+					<uniqueVersion>true</uniqueVersion>
+					<id>axamit.webteam.dev</id>
+					<name>Webteam Dev Repository</name>
+					<url>https://axamit.jfrog.io/artifactory/webteam-java-dev-local</url>
+					<layout>default</layout>
+				</repository>
+			</distributionManagement>
+		</profile>
+
+		<profile>
+			<id>prod</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>env</name>
+					<value>prod</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.kiwigrid</groupId>
+						<artifactId>helm-maven-plugin</artifactId>
+						<version>5.6</version>
+						<configuration>
+							<chartDirectory>${project.basedir}/helm</chartDirectory>
+							<chartVersion>${project.version}</chartVersion>
+							<!-- This is the related section to use local binary with auto-detection disabled. -->
+							<useLocalHelmBinary>true</useLocalHelmBinary>
+							<skipInit>true</skipInit>
+							<skipDryRun>true</skipDryRun>
+							<settings>${settings}</settings>
+							<uploadRepoStable>
+								<name>helm-stable</name>
+								<url>https://axamit.jfrog.io/artifactory/helm-stable</url>
+								<!-- Artifactory requires basic authentication -->
+								<!-- which is supported from HELM version >= 2.9 -->
+								<type>ARTIFACTORY</type>
+							</uploadRepoStable>
+						</configuration>
+						<executions>
+							<execution>
+								<id>package.${env}</id>
+								<goals>
+									<goal>package</goal>
+								</goals>
+								<phase>package</phase>
+							</execution>
+							<execution>
+								<id>upload.${env}</id>
+								<goals>
+									<goal>upload</goal>
+								</goals>
+								<phase>deploy</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+			<distributionManagement>
+				<repository>
+					<uniqueVersion>true</uniqueVersion>
+					<id>axamit.webteam.prod</id>
+					<name>Webteam Prod Repository</name>
+					<url>https://axamit.jfrog.io/artifactory/webteam-java-prod-local</url>
+					<layout>default</layout>
+				</repository>
+			</distributionManagement>
+		</profile>
+	</profiles>
 
 </project>
