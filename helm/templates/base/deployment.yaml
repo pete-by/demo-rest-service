@@ -31,7 +31,7 @@ spec:
           httpGet:
             path: /actuator/health/readiness
             port: http
-          initialDelaySeconds: 10
+          initialDelaySeconds: 20
           timeoutSeconds: 3
           periodSeconds: 5
           failureThreshold: 3
@@ -41,7 +41,7 @@ spec:
           httpGet:
             path: /actuator/health/liveness # /alive
             port: http
-          initialDelaySeconds: 10 # means that send the GET request after waiting 10 seconds.
+          initialDelaySeconds: 20 # means that send the GET request after waiting 10 seconds.
           timeoutSeconds: 3 # means that if there is no response within 3 seconds, time out.
           periodSeconds: 5 # means that check by sending this request every 5 seconds.
           failureThreshold: 3 # means that let it fail 3 times.
@@ -50,7 +50,26 @@ spec:
             httpGet:
               path: /stopping
               port: http
-        resources: {}
+        volumeMounts:
+          # name must match the volume name below
+          - name: secret-volume
+            mountPath: /etc/secret-volume
+            readOnly: true
+        resources:
+          limits:
+            memory: 500Mi
+            cpu: 1
+          requests:
+            memory: 300Mi
+            cpu: 500m
       restartPolicy: Always
       terminationGracePeriodSeconds: 15
+      # The secret data is exposed to Containers in the Pod through a Volume.
+      # Reasoning: https://diogomonica.com/2017/03/27/why-you-shouldnt-use-env-variables-for-secret-data/
+      # https://oteemo.com/2019/06/20/hashicorp-vault-is-overhyped-and-mozilla-sops-with-kms-and-git-is-massively-underrated/
+      # https://habr.com/ru/company/oleg-bunin/blog/438740/
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: postgresql-secret
 status: {}
