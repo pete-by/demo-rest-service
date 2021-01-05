@@ -11,7 +11,7 @@ spec:
     - name: build-container
       image: docker.io/peteby/build-container
       terminationMessagePolicy: FallbackToLogsOnError
-      command: ["sleep","10m"]
+      command: ["cat"]
       env:
         - name: CONTAINER_ENV_VAR
           value: build-container
