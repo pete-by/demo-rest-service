@@ -1,10 +1,41 @@
 pipeline {
-    agent any
-
+    environment {
+        DOCKER_REGISTRY_SECRET = 'docker-hub-secret'
+    }
+    agent {
+        kubernetes {
+            yamlFile 'KubernetesPod.yaml'
+        }
+    }
     stages {
-        stage('Build') {
+        stage('Run maven') {
+          steps {
+            sh 'set'
+            sh "echo OUTSIDE_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}"
+            container('maven') {
+              sh 'echo MAVEN_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}'
+              sh 'mvn -version'
+            }
+          }
+        }
+        /*
+        stage('setup') {
             steps {
-                echo 'Building..'
+                sh "env"
+                sh "/usr/local/bin/docker -v"
+            }
+        }
+        stage('Build') {
+            agent {
+                docker {
+                    image 'peteby/build-container'
+                    registryUrl 'https://docker.io'
+                    registryCredentialsId 'docker-hub-secret'
+                    args '-v ${PWD}:/app -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                sh 'mvn clean install'
             }
         }
         stage('Test') {
@@ -16,6 +47,6 @@ pipeline {
             steps {
                 echo 'Deploying....'
             }
-        }
+        }*/
     }
 }
