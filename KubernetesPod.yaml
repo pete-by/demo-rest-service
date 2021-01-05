@@ -13,7 +13,6 @@ spec:
       tty: true
       terminationMessagePolicy: FallbackToLogsOnError
       command: ["/bin/sh"]
-      args: ["-c", "sleep infinity"]
       env:
         - name: CONTAINER_ENV_VAR
           value: build-container
