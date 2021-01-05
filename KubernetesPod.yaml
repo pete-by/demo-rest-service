@@ -12,7 +12,7 @@ spec:
       image: docker.io/peteby/build-container
       tty: true
       terminationMessagePolicy: FallbackToLogsOnError
-      command: ["/bin/sh"]
+      command: ["mvn"]
       env:
         - name: CONTAINER_ENV_VAR
           value: build-container
