@@ -8,18 +8,8 @@ spec:
       env:
         - name: CONTAINER_ENV_VAR
           value: jnlp
-    - name: maven
-      image: maven:3.3.9-jdk-8-alpine
-      command:
-        - cat
-      tty: true
-      env:
-        - name: CONTAINER_ENV_VAR
-          value: maven
     - name: build-container
       image: docker.io/peteby/build-container
-      command:
-        - cat
       tty: true
       env:
         - name: CONTAINER_ENV_VAR
