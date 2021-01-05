@@ -18,7 +18,7 @@ spec:
         - name: CONTAINER_ENV_VAR
           value: maven
     - name: build-container
-      image: index.docker.io/v1/peteby/build-container
+      image: docker.io/peteby/build-container
       command:
         - ls
       tty: true
