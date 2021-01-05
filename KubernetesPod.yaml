@@ -1,5 +1,4 @@
-%YAML 1.2
----
+
 metadata:
   labels:
     app: rest-demo-service
@@ -17,3 +16,13 @@ spec:
       env:
         - name: CONTAINER_ENV_VAR
           value: maven
+    - name: build-container
+      image: docker.io/peteby/build-container
+      command:
+        - cat
+      tty: true
+      env:
+        - name: CONTAINER_ENV_VAR
+          value: build-container
+  imagePullSecrets:
+    - name: regcred
