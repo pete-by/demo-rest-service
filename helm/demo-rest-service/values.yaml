@@ -1,0 +1,5 @@
+appName: demo-rest-service
+namespace: axamit
+env: local
+liveness: false
+readiness: false

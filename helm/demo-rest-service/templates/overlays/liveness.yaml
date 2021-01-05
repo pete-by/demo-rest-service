@@ -1,0 +1,10 @@
+# If HTTP GET request to liveness doesn't receive UP status in the timing conditions above,
+# the pod will restart.
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness # /alive
+    port: http
+  initialDelaySeconds: 20 # means that send the GET request after waiting 10 seconds.
+  timeoutSeconds: 3 # means that if there is no response within 3 seconds, time out.
+  periodSeconds: 5 # means that check by sending this request every 5 seconds.
+  failureThreshold: 3 # means that let it fail 3 times.

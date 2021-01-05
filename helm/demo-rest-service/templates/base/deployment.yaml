@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/version: {{ $.Chart.AppVersion }}
+    app: {{ .Values.appName }}
+  name: {{ .Values.appName }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      containers:
+      - image: peteby/{{ .Values.appName }}
+        name: {{ .Values.appName }}
+        env:
+          - name: env
+            value: {{ default "local" .Values.env }}
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        lifecycle:
+          preStop:
+            httpGet:
+              path: /stopping
+              port: http
+        volumeMounts:
+          # name must match the volume name below
+          - name: secret-volume
+            mountPath: /etc/secret-volume
+            readOnly: true
+        resources:
+          limits:
+            memory: 500Mi
+            cpu: 1
+          requests:
+            memory: 300Mi
+            cpu: 500m
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 15
+      # The secret data is exposed to Containers in the Pod through a Volume.
+      # Reasoning: https://diogomonica.com/2017/03/27/why-you-shouldnt-use-env-variables-for-secret-data/
+      # https://oteemo.com/2019/06/20/hashicorp-vault-is-overhyped-and-mozilla-sops-with-kms-and-git-is-massively-underrated/
+      # https://habr.com/ru/company/oleg-bunin/blog/438740/
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: postgresql-secret
+status: {}

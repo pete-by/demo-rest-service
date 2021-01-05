@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.axamit.springboot</groupId>
+        <artifactId>demo-rest-service-parent</artifactId>
+        <version>${revision}+${sha1}</version>
+    </parent>
+    <artifactId>demo-rest-service-chart</artifactId>
+    <packaging>helm</packaging>
+
+    <properties>
+        <chart.name>demo-rest-service</chart.name>
+        <outputDirectory>${project.basedir}/target</outputDirectory>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>env</name>
+                    <value>local</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.kiwigrid</groupId>
+                        <artifactId>helm-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>package.${env}</id>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+		<profile>
+			<id>prod</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>env</name>
+					<value>prod</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.kiwigrid</groupId>
+						<artifactId>helm-maven-plugin</artifactId>
+						<version>5.6</version>
+						<configuration>
+							<chartDirectory>${project.basedir}/helm/${project.artifactId}</chartDirectory>
+							<chartVersion>${project.version}</chartVersion>
+							<appVersion>${project.version}</appVersion>
+							<useLocalHelmBinary>true</useLocalHelmBinary>
+							<skipInit>true</skipInit>
+							<skipDryRun>true</skipDryRun>
+							<settings>${settings}</settings>
+							<uploadRepoStable>
+								<name>helm-stable</name>
+								<url>https://axamit.jfrog.io/artifactory/helm-stable</url>
+								<type>ARTIFACTORY</type>
+							</uploadRepoStable>
+						</configuration>
+						<executions>
+							<execution>
+								<id>package.${env}</id>
+								<goals>
+									<goal>package</goal>
+								</goals>
+								<phase>package</phase>
+							</execution>
+							<execution>
+								<id>upload.${env}</id>
+								<goals>
+									<goal>upload</goal>
+								</goals>
+								<phase>deploy</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+
+			<distributionManagement>
+				<repository>
+					<uniqueVersion>true</uniqueVersion>
+					<id>axamit.webteam.prod</id>
+					<name>Webteam Prod Repository</name>
+					<url>https://axamit.jfrog.io/artifactory/webteam-java-prod-local</url>
+					<layout>default</layout>
+				</repository>
+			</distributionManagement>
+		</profile>
+		-->
+
+    </profiles>
+
+    <build>
+
+        <plugins>
+
+            <plugin>
+                <groupId>com.kiwigrid</groupId>
+                <artifactId>helm-maven-plugin</artifactId>
+                <version>5.6</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <chartDirectory>${project.basedir}/${chart.name}</chartDirectory>
+                    <chartVersion>${project.version}</chartVersion>
+                    <appVersion>${project.version}</appVersion>
+                    <outputDirectory>${outputDirectory}</outputDirectory>
+                    <!-- This is the related section to use local binary with auto-detection disabled. -->
+                    <useLocalHelmBinary>true</useLocalHelmBinary>
+                    <skipInit>true</skipInit>
+                    <skipLint>true</skipLint>
+                    <skipDryRun>true</skipDryRun>
+                    <skipUpload>true</skipUpload>
+                    <settings>${settings}</settings>
+                    <uploadRepoStable>
+                        <name>helm-stable</name>
+                        <url>https://axamit.jfrog.io/artifactory/helm-stable</url>
+                        <type>ARTIFACTORY</type>
+                    </uploadRepoStable>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+                <configuration>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>${chart.name}</artifactId>
+                    <version>${project.version}</version>
+                    <file>${outputDirectory}/${chart.name}-${project.version}.tgz</file>
+                    <classifier>chart</classifier>
+                    <packaging>tgz</packaging>
+                    <generatePom>false</generatePom>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>install</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+				Used to create (and publish) helm package
+			    Note: currently uses Helm binary through system path
+			-->
+            <!-- Used to render helm templates for Kustomize -->
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <!--executions>
+                    <execution>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>deploy</phase>
+                    </execution>
+                </executions-->
+                <configuration>
+                    <executable>helm</executable>
+                    <workingDirectory>${outputDirectory}/${chart.name}</workingDirectory>
+                    <arguments>
+                        <argument>template</argument>
+                        <argument> --debug</argument>
+                        <argument>.</argument>
+                        <argument> --output-dir</argument>
+                        <argument>../../k8s</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+
+
+        </plugins>
+
+    </build>
+
+</project>

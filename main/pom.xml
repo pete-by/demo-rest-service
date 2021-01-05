@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>demo-rest-service-parent</artifactId>
+        <groupId>com.axamit.springboot</groupId>
+        <version>${revision}+${sha1}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>demo-rest-service</artifactId>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
+    <profiles>
+
+        <!-- Target container registries -->
+        <profile>
+            <id>DCR</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <image.path>docker.io/peteby/${project.artifactId}</image.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>GCR</id>
+            <properties>
+                <image.path>gcr.io/peteby/${project.artifactId}</image.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>ECR</id>
+            <properties>
+                <image.path>peteby.dkr.ecr.region.amazonaws.com/${project.artifactId}</image.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>ACR</id>
+            <properties>
+                <image.path>peteby.azurecr.io/${project.groupId}/${project.artifactId}</image.path>
+            </properties>
+        </profile>
+
+    </profiles>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <plugins>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- This plugin is used to create and push Docker image -->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>2.7.0</version>
+                <configuration>
+                    <from>
+                        <!--image>adoptopenjdk/openjdk11:jdk-11.0.9.1_1-centos</image-->
+                        <image>gcr.io/distroless/java:${java.version}</image>
+                    </from>
+                    <to>
+                        <image>${image.path}</image>
+                        <tags>
+                            <tag>${git.commit.id.abbrev}</tag>
+                        </tags>
+                    </to>
+                    <container>
+                        <user>nobody:nobody</user> <!-- https://github.com/GoogleContainerTools/jib/issues/1029 -->
+                    </container>
+                </configuration>
+                <!--executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions-->
+            </plugin>
+
+            <plugin>
+                <!-- See https://www.baeldung.com/spring-git-information -->
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>4.0.3</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>validate-the-git-infos</id>
+                        <goals>
+                            <goal>validateRevision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- To not check to remote repos -->
+                    <offline>true</offline>
+                    <!-- When working with project with submodules, setting this flag makes sure, that plugin works only for parent repository -->
+                    <runOnlyOnce>true</runOnlyOnce>
+                    <!-- To allow using git props in pom.xml -->
+                    <injectAllReactorProjects>true</injectAllReactorProjects>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                    <!-- <format>json</format> -->
+                    <excludeProperties>
+                        <!-- hide personal info -->
+                        <excludeProperty>git.user.*</excludeProperty>
+                        <excludeProperty>git.commit.user.*</excludeProperty>
+                        <excludeProperty>git.build.user.*</excludeProperty>
+                    </excludeProperties>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.18</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>3.4.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
