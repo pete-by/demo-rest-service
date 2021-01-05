@@ -8,6 +8,7 @@ pipeline {
         }
     }
     stages {
+        /*
         stage('Run maven') {
           steps {
             sh 'set'
@@ -18,6 +19,7 @@ pipeline {
             }
           }
         }
+        */
         stage('Run build container') {
           steps {
             sh 'set'
