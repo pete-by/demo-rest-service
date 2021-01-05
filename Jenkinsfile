@@ -18,6 +18,16 @@ pipeline {
             }
           }
         }
+        stage('Run build container') {
+          steps {
+            sh 'set'
+            sh "echo OUTSIDE_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}"
+            container('build-container') {
+              sh 'echo MAVEN_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}'
+              sh 'mvn clean install'
+            }
+          }
+        }
         /*
         stage('setup') {
             steps {
