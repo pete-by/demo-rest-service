@@ -10,7 +10,6 @@ spec:
           value: jnlp
     - name: build-container
       image: docker.io/peteby/build-container
-      tty: true
       terminationMessagePolicy: FallbackToLogsOnError
       command: ["sleep","10m"]
       env:
