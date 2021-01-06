@@ -3,19 +3,27 @@ metadata:
   labels:
     app: rest-demo-service
 spec:
+  volumes:
+    - name: maven-repo-pv
+      persistentVolumeClaim:
+        claimName: maven-repo-pvc
   containers:
     - name: jnlp
       env:
         - name: CONTAINER_ENV_VAR
           value: jnlp
     - name: build-container
-      image: docker.io/peteby/build-container:1.0.8
-      runAsUser: 1000
-      runAsGroup: 1000
+      image: docker.io/peteby/build-container:1.0.9
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       tty: true
       command: ["cat"]
       env:
         - name: CONTAINER_ENV_VAR
           value: build-container
+      volumeMounts:
+        - mountPath: "/home/jenkins/.m2"
+          name: maven-repo-pv
   imagePullSecrets:
     - name: regcred
