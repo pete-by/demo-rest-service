@@ -14,10 +14,10 @@ spec:
       env:
         - name: CONTAINER_ENV_VAR
           value: jnlp
-      command: [ "sh", "-c", "chown -R 1000:1000 /home/jenkins/.m2" ]
-      volumeMounts:
-        - name: maven-repo-pv
-          mountPath: /home/jenkins/.m2
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
     - name: build-container
       image: docker.io/peteby/build-container:1.10.0
       securityContext:
