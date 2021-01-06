@@ -24,13 +24,11 @@ pipeline {
           steps {
             sh 'set'
             sh "echo OUTSIDE_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}"
-            sh 'stat -c "%u %g" /proc/$pid/'
             sh 'whoami'
             container('build-container') {
               sh 'echo MAVEN_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}'
-              sh 'stat -c "%u %g" /proc/$pid/'
               sh 'whoami'
-              sh 'ls -la'
+              sh 'ls /home/jenkins/.m2'
               sh 'mvn clean install'
             }
           }
