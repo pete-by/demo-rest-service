@@ -13,7 +13,7 @@ spec:
         - name: CONTAINER_ENV_VAR
           value: jnlp
     - name: build-container
-      image: docker.io/peteby/build-container:1.0.9
+      image: docker.io/peteby/build-container:1.10.0
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
