@@ -25,11 +25,14 @@ pipeline {
             sh 'set'
             sh "echo OUTSIDE_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}"
             sh 'whoami'
-            container('build-container') {
-              sh 'echo MAVEN_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}'
-              sh 'whoami'
-              sh 'ls -la /home/jenkins/.m2'
-              sh 'mvn clean install -X'
+            withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD'),
+                             usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
+                container('build-container') {
+                  sh 'echo MAVEN_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}'
+                  sh 'whoami'
+                  sh 'ls -la /home/jenkins/.m2'
+                  sh 'mvn clean install'
+                }
             }
           }
         }
