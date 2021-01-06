@@ -9,18 +9,15 @@ spec:
     - name: maven-repo-pv
       persistentVolumeClaim:
         claimName: maven-repo-pvc
-  initContainers:
-    - name: volume-mount-hack
-      image: busybox
-      command: [ "sh", "-c", "chown -R 1000:1000 /home/jenkins/.m2" ]
-      volumeMounts:
-        - name: maven-repo-pv
-          mountPath: /home/jenkins/.m2
   containers:
     - name: jnlp
       env:
         - name: CONTAINER_ENV_VAR
           value: jnlp
+      command: [ "sh", "-c", "chown -R 1000:1000 /home/jenkins/.m2" ]
+      volumeMounts:
+        - name: maven-repo-pv
+          mountPath: /home/jenkins/.m2
     - name: build-container
       image: docker.io/peteby/build-container:1.10.0
       securityContext:
