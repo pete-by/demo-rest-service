@@ -29,8 +29,8 @@ pipeline {
               sh 'echo MAVEN_CONTAINER_ENV_VAR = ${CONTAINER_ENV_VAR}'
               sh 'whoami'
               sh 'ls /home/jenkins/.m2'
-              sh 'mvn clean install'
-              sh 'ls /home/jenkins/.m2'
+              sh 'set'
+              sh "echo \${MAVEN_REPO}"
             }
           }
         }
