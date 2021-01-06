@@ -15,7 +15,6 @@ spec:
         - name: CONTAINER_ENV_VAR
           value: jnlp
       securityContext:
-        fsGroup: 1000
         runAsUser: 1000
         runAsGroup: 1000
     - name: build-container
