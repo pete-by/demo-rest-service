@@ -3,6 +3,8 @@ metadata:
   labels:
     app: rest-demo-service
 spec:
+  securityContext:
+    fsGroup: 1000
   volumes:
     - name: maven-repo-pv
       persistentVolumeClaim:
