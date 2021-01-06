@@ -30,6 +30,7 @@ pipeline {
               sh 'whoami'
               sh 'ls /home/jenkins/.m2'
               sh 'mvn clean install'
+              sh 'ls /home/jenkins/.m2'
             }
           }
         }

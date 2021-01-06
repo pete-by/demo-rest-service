@@ -25,5 +25,6 @@ spec:
       volumeMounts:
         - mountPath: "/home/jenkins/.m2"
           name: maven-repo-pv
+          readOnly: false
   imagePullSecrets:
     - name: regcred
