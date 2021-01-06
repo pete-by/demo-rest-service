@@ -9,7 +9,7 @@ spec:
         - name: CONTAINER_ENV_VAR
           value: jnlp
     - name: build-container
-      image: docker.io/peteby/build-container:1.0.3
+      image: docker.io/peteby/build-container:1.0.7
       tty: true
       command: ["cat"]
       env:

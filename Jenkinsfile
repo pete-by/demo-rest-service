@@ -31,6 +31,7 @@ pipeline {
               sh 'stat -c "%u %g" /proc/$pid/'
               sh 'whoami'
               sh 'ls -la'
+              sh 'mvn clean install'
             }
           }
         }
