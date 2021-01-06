@@ -10,6 +10,8 @@ spec:
           value: jnlp
     - name: build-container
       image: docker.io/peteby/build-container:1.0.7
+      runAsUser: jenkins
+      runAsGroup: jenkins
       tty: true
       command: ["cat"]
       env:
