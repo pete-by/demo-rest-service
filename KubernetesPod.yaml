@@ -9,6 +9,13 @@ spec:
     - name: maven-repo-pv
       persistentVolumeClaim:
         claimName: maven-repo-pvc
+  initContainers:
+    - name: volume-mount-hack
+      image: busybox
+      command: [ "sh", "-c", "chown -R 1000:1000 /home/jenkins/.m2" ]
+      volumeMounts:
+        - name: maven-repo-pv
+          mountPath: /home/jenkins/.m2
   containers:
     - name: jnlp
       env:
