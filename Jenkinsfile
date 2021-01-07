@@ -37,6 +37,7 @@ pipeline {
                       sh "mvn clean install -Drevision=1.0.0 -Dsha1=${commitId}"
                       def nextVersion = nextVersionFromGit("patch")
                       sh("git tag ${nextVersion}")
+                      sh("git push")
                     }
                 }
             }
