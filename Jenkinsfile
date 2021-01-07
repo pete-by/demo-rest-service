@@ -37,7 +37,7 @@ pipeline {
                       sh "mvn clean install -Drevision=1.0.0 -Dsha1=${commitId}"
                       def nextVersion = nextVersionFromGit("patch")
                       sh("git tag ${nextVersion}")
-                      sshagent((credentials: ['github-secret']) {
+                      sshagent(credentials: ['github-secret']) {
                          sh("git push origin --tags")
                       }
                     }
