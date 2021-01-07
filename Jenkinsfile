@@ -38,7 +38,7 @@ pipeline {
                       def nextVersion = nextVersionFromGit("patch")
                       sh("git tag ${nextVersion}")
                       sshagent(credentials: ['github-secret']) {
-                         sh("git push origin --tags")
+                         sh("GIT_SSH_COMMAND=\"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no\" git push origin --tags")
                       }
                     }
                 }
