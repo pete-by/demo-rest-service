@@ -81,7 +81,7 @@
                     <to>
                         <image>${image.path}</image>
                         <tags>
-                            <tag>${git.commit.id.abbrev}</tag>
+                            <tag>${version}</tag>
                         </tags>
                     </to>
                     <container>
