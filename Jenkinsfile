@@ -82,7 +82,7 @@ pipeline {
 
                         container('build-container') {
                             dir('main') {
-                                sh "mvn com.google.cloud.tools:jib-maven-plugin:build -Drevision=${revision} -Dsha1=${commitId}"
+                                sh "mvn com.google.cloud.tools:jib-maven-plugin:build -PDCR -Drevision=${revision} -Dsha1=${commitId}"
                             }
                             sh "mvn deploy:deploy -Drevision=${revision} -Dsha1=${commitId}"
                         }
