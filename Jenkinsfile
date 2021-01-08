@@ -1,6 +1,6 @@
 def getLatestRevisionFromGit() {
     def defaultRevision = '1.0.0'
-    def latestRevision = sh returnStdout: true, script: 'git describe --tags "$(git rev-list --tags=*.*.* --max-count=1 2> /dev/null)" 2> /dev/null || echo ${defaultRevision}'
+    def latestRevision = sh returnStdout: true, script: "git describe --tags '\$(git rev-list --tags=*.*.* --max-count=1 2> /dev/null)' 2> /dev/null || echo ${defaultRevision}"
     latestRevision
 }
 
@@ -44,14 +44,19 @@ pipeline {
                         script {
 
                             commitId = sh returnStdout: true, script: 'git rev-parse --short HEAD'
-                            def commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || echo "
+                            def commitRevision
+                            try {
+                               commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || exit 0 "
+                            } catch(Exception e) {
+                                // ignore
+                            }
 
                             if (commitRevision?.trim()) {
                                 revision = commitRevision; // reuse the revision number of this commit to avoid patch increment
                             } else {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
                             }
-                            sh "mvn clean compile jib:build -Drevision=${revision} -Dsha1=${commitId}"
+                            sh "mvn clean compile -Drevision=${revision} -Dsha1=${commitId}"
                         }
                     }
                 }
@@ -60,8 +65,8 @@ pipeline {
         } // Build
         stage('Test') {
             steps {
-                echo 'Testing..'
-                sh "mvn test:test"
+                echo 'Testing...'
+                sh 'mvn surefire:test'
             }
         }
         stage('Deploy') {
@@ -73,7 +78,12 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD'),
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
 
-                        sh "mvn deploy:deploy jib:build  -Drevision=${revision} -Dsha1=${commitId}"
+                        sh '''
+                            cd main
+                            mvn com.google.cloud.tools:jib-maven-plugin:build -Drevision=${revision} -Dsha1=${commitId}
+                        '''
+
+                        sh "mvn deploy:deploy -Drevision=${revision} -Dsha1=${commitId}"
                         sh("git tag -a ${revision} -m 'Jenkins'")
 
                         sshagent(credentials: ['github-secret']) {
