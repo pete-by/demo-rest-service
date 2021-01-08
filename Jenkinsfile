@@ -47,13 +47,13 @@ pipeline {
                             commitId = sh returnStdout: true, script: 'git rev-parse --short HEAD'
                             def commitRevision
                             try {
-                               commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || exit 0 "
-                               sameRevision = true
+                               commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || echo ''"
                             } catch(Exception e) {
                                 // ignore
                             }
 
-                            if (sameRevision) {
+                            if (commitRevision?.trim()) {
+                                sameRevision = true
                                 revision = commitRevision; // reuse the revision number of this commit to avoid patch increment
                             } else {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
