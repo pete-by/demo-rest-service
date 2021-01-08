@@ -43,8 +43,8 @@ pipeline {
                     container('build-container') {
                         script {
 
-                            commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
-                            def commitRevision = sh(returnStdout: true, script: "git describe --exact-match --tags ${commitId} || echo ''")
+                            commitId = sh returnStdout: true, script: 'git rev-parse --short HEAD'
+                            def commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || echo "
 
                             if (commitRevision?.trim()) {
                                 revision = commitRevision; // reuse the revision number of this commit to avoid patch increment
@@ -74,7 +74,7 @@ pipeline {
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
 
                         sh "mvn deploy:deploy jib:build  -Drevision=${revision} -Dsha1=${commitId}"
-                        sh("git tag ${revision}")
+                        sh("git tag -a ${revision} -m 'Jenkins'")
 
                         sshagent(credentials: ['github-secret']) {
                           sh("git push origin --tags")
