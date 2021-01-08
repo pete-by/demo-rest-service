@@ -21,6 +21,8 @@ def nextRevisionFromGit(scope) {
     nextRevision
 }
 
+def revision;
+def commitId
 
 pipeline {
     environment {
@@ -35,13 +37,21 @@ pipeline {
         stage('Build') {
             steps {
 
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD'),
-                                 usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'artifactory-secret',
+                                                usernameVariable: 'ARTIFACTORY_STAGING_USERNAME',
+                                                passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
                     container('build-container') {
                         script {
-                          def commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
-                          def latestRevision = getLatestRevisionFromGit()
-                          sh "mvn clean compile -Drevision=${latestRevision} -Dsha1=${commitId}"
+
+                            commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
+                            def commitRevision = sh(returnStdout: true, script: "git describe --exact-match --tags ${commitId} || echo ''")
+
+                            if (commitRevision?.trim()) {
+                                revision = commitRevision; // reuse the revision number of this commit to avoid patch increment
+                            } else {
+                                revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
+                            }
+                            sh "mvn clean compile jib:build -Drevision=${revision} -Dsha1=${commitId}"
                         }
                     }
                 }
@@ -51,21 +61,27 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing..'
+                sh "mvn test:test"
             }
         }
         stage('Deploy') {
 
-            script {
-
-              def nextVersion = nextVersionFromGit("patch")
-              sh("git tag ${nextVersion}")
-              sshagent(credentials: ['github-secret']) {
-                sh("git push origin --force -v --tags")
-              }
-            }
-
             steps {
                 echo 'Deploying....'
+                script {
+
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD'),
+                                     usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
+
+                        sh "mvn deploy:deploy jib:build  -Drevision=${revision} -Dsha1=${commitId}"
+                        sh("git tag ${revision}")
+
+                        sshagent(credentials: ['github-secret']) {
+                          sh("git push origin --tags")
+                        }
+                    }
+
+                }
             }
         }
     }

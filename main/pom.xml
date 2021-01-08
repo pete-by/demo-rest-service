@@ -88,14 +88,14 @@
                         <user>nobody:nobody</user> <!-- https://github.com/GoogleContainerTools/jib/issues/1029 -->
                     </container>
                 </configuration>
-                <!--executions>
+                <executions>
                     <execution>
-                        <phase>package</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>build</goal>
                         </goals>
                     </execution>
-                </executions-->
+                </executions>
             </plugin>
 
             <plugin>
