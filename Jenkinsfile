@@ -48,6 +48,7 @@ pipeline {
                             def commitRevision
                             try {
                                commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || echo ''"
+                               commitRevision = commitRevision.trim() // to trim new lines
                             } catch(Exception e) {
                                 // ignore
                             }
