@@ -44,14 +44,13 @@
             </build>
         </profile>
 
-        <!--
 		<profile>
-			<id>prod</id>
+			<id>staging</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
 				<property>
 					<name>env</name>
-					<value>prod</value>
+					<value>staging</value>
 				</property>
 			</activation>
 			<build>
@@ -97,14 +96,13 @@
 			<distributionManagement>
 				<repository>
 					<uniqueVersion>true</uniqueVersion>
-					<id>axamit.webteam.prod</id>
-					<name>Webteam Prod Repository</name>
-					<url>https://axamit.jfrog.io/artifactory/webteam-java-prod-local</url>
+					<id>axamit.webteam.staging</id>
+					<name>Webteam Dev Repository</name>
+					<url>https://axamit.jfrog.io/artifactory/webteam-java-dev-local</url>
 					<layout>default</layout>
 				</repository>
 			</distributionManagement>
 		</profile>
-		-->
 
     </profiles>
 
