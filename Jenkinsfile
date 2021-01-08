@@ -85,7 +85,7 @@ pipeline {
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
 
                         container('build-container') {
-                            sh "mvn deploy -PdeployToArtifactory,staging -Drevision=${revision} -Dsha1=${commitId}"
+                            sh "mvn deploy -PdeployToArtifactory,staging,dcr -Drevision=${revision} -Dsha1=${commitId}"
                         }
 
                     } // withCredentials
