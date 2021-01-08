@@ -21,7 +21,8 @@ def nextRevisionFromGit(scope) {
     nextRevision
 }
 
-def revision;
+def revision
+def sameRevision = false
 def commitId
 
 pipeline {
@@ -47,11 +48,12 @@ pipeline {
                             def commitRevision
                             try {
                                commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || exit 0 "
+                               sameRevision = true
                             } catch(Exception e) {
                                 // ignore
                             }
 
-                            if (commitRevision?.trim()) {
+                            if (sameRevision) {
                                 revision = commitRevision; // reuse the revision number of this commit to avoid patch increment
                             } else {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
@@ -87,10 +89,12 @@ pipeline {
 
                     } // withCredentials
 
-                    sh("git tag -a ${revision} -m 'Jenkins'")
+                    if(!sameRevision) { // only tag release and push if it there were changes
+                        sh("git tag -a ${revision} -m 'Jenkins'")
 
-                    sshagent(credentials: ['github-secret']) {
-                        sh("git push origin --tags")
+                        sshagent(credentials: ['github-secret']) {
+                            sh("git push origin --tags")
+                        }
                     }
                 }
             }
