@@ -77,12 +77,12 @@ pipeline {
                 echo 'Deploying....'
                 script {
 
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD'),
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_REGISTRY_USERNAME', passwordVariable: 'DOCKER_REGISTRY_PASSWORD'),
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
 
                         container('build-container') {
                             dir('main') {
-                                sh "mvn com.google.cloud.tools:jib-maven-plugin:build -PDCR -Drevision=${revision} -Dsha1=${commitId}"
+                                sh "mvn com.google.cloud.tools:jib-maven-plugin:build -Pdcr,deployToArtifactory -Drevision=${revision} -Dsha1=${commitId}"
                             }
                             sh "mvn deploy:deploy -Drevision=${revision} -Dsha1=${commitId}"
                         }

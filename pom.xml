@@ -30,7 +30,7 @@
 
 	<profiles>
 		<profile>
-			<id>buildAgent</id>
+			<id>deployToArtifactory</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
 			</activation>

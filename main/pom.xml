@@ -20,7 +20,7 @@
 
         <!-- Target container registries -->
         <profile>
-            <id>DCR</id>
+            <id>dcr</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -29,19 +29,19 @@
             </properties>
         </profile>
         <profile>
-            <id>GCR</id>
+            <id>gcr</id>
             <properties>
                 <image.path>gcr.io/peteby/${project.artifactId}</image.path>
             </properties>
         </profile>
         <profile>
-            <id>ECR</id>
+            <id>ecr</id>
             <properties>
                 <image.path>peteby.dkr.ecr.region.amazonaws.com/${project.artifactId}</image.path>
             </properties>
         </profile>
         <profile>
-            <id>ACR</id>
+            <id>acr</id>
             <properties>
                 <image.path>peteby.azurecr.io/${project.groupId}/${project.artifactId}</image.path>
             </properties>
@@ -72,7 +72,7 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>2.7.0</version>
+                <version>2.7.1</version>
                 <configuration>
                     <from>
                         <!--image>adoptopenjdk/openjdk11:jdk-11.0.9.1_1-centos</image-->
@@ -84,8 +84,8 @@
                             <tag>${sha1}</tag>
                         </tags>
                         <auth>
-                            <username>${env.DOCKER_HUB_USERNAME}</username>
-                            <password>${env.DOCKER_HUB_PASSWORD}</password>
+                            <username>${env.DOCKER_REGISTRY_USERNAME}</username>
+                            <password>${env.DOCKER_REGISTRY_PASSWORD}</password>
                         </auth>
                     </to>
                     <container>
