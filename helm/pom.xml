@@ -60,9 +60,10 @@
 						<artifactId>helm-maven-plugin</artifactId>
 						<version>5.6</version>
 						<configuration>
-							<chartDirectory>${project.basedir}/helm/${project.artifactId}</chartDirectory>
+							<chartDirectory>${project.basedir}/${chart.name}</chartDirectory>
 							<chartVersion>${project.version}</chartVersion>
 							<appVersion>${project.version}</appVersion>
+                            <outputDirectory>${outputDirectory}</outputDirectory>
 							<useLocalHelmBinary>true</useLocalHelmBinary>
 							<skipInit>true</skipInit>
 							<skipDryRun>true</skipDryRun>
