@@ -81,11 +81,9 @@ pipeline {
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
 
                         container('build-container') {
-                            sh '''
-                                cd main
-                                mvn com.google.cloud.tools:jib-maven-plugin:build -Drevision=${revision} -Dsha1=${commitId}
-                            '''
-
+                            dir('main') {
+                                sh "mvn com.google.cloud.tools:jib-maven-plugin:build -Drevision=${revision} -Dsha1=${commitId}"
+                            }
                             sh "mvn deploy:deploy -Drevision=${revision} -Dsha1=${commitId}"
                         }
 
