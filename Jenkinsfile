@@ -84,7 +84,7 @@ pipeline {
                             dir('main') {
                                 sh "mvn com.google.cloud.tools:jib-maven-plugin:build -Pdcr -Drevision=${revision} -Dsha1=${commitId}"
                             }
-                            sh "mvn deploy:deploy -s \${MAVEN_HOME}/conf/settings.xml -PdeployToArtifactory -Drevision=${revision} -Dsha1=${commitId}"
+                            sh "mvn jar:jar deploy:deploy -s \${MAVEN_HOME}/conf/settings.xml -PdeployToArtifactory -Drevision=${revision} -Dsha1=${commitId}"
                         }
 
                     } // withCredentials
