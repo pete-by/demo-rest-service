@@ -45,7 +45,7 @@
 			<distributionManagement>
 				<repository>
 					<uniqueVersion>true</uniqueVersion>
-					<id>axamit.webteam.dev</id>
+					<id>axamit.webteam.staging</id>
 					<name>Webteam Dev Repository</name>
 					<url>https://axamit.jfrog.io/artifactory/webteam-java-dev-local</url>
 					<layout>default</layout>
