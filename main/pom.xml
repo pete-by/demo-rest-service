@@ -81,7 +81,7 @@
                     <to>
                         <image>${image.path}</image>
                         <tags>
-                            <tag>${version}</tag>
+                            <tag>${sha1}</tag>
                         </tags>
                     </to>
                     <container>
