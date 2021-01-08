@@ -85,16 +85,17 @@ pipeline {
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
 
                         container('build-container') {
-                            sh "mvn deploy -s \${MAVEN_HOME}/conf/settings.xml -PdeployToArtifactory,staging -Drevision=${revision} -Dsha1=${commitId}"
+                            sh "mvn deploy -PdeployToArtifactory,staging -Drevision=${revision} -Dsha1=${commitId}"
                         }
 
                     } // withCredentials
 
                     if(!sameRevision) { // only tag release and push if it there were changes
-                        sh("git tag -a ${revision} -m 'Jenkins'")
-
                         sshagent(credentials: ['github-secret']) {
-                            sh("git push origin --tags")
+                           sh """
+                              git tag -a ${revision} -m 'Jenkins Build Agent'
+                              git push origin --tags
+                            """
                         }
                     }
                 }
