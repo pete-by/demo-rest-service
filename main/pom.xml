@@ -83,6 +83,10 @@
                         <tags>
                             <tag>${sha1}</tag>
                         </tags>
+                        <auth>
+                            <username>${env.DOCKER_HUB_USERNAME}</username>
+                            <password>${env.DOCKER_HUB_PASSWORD}</password>
+                        </auth>
                     </to>
                     <container>
                         <user>nobody:nobody</user> <!-- https://github.com/GoogleContainerTools/jib/issues/1029 -->
