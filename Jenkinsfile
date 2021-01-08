@@ -66,7 +66,9 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing...'
-                sh 'mvn surefire:test'
+                container('build-container') {
+                    sh 'mvn test'
+                }
             }
         }
         stage('Deploy') {
@@ -78,19 +80,22 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD'),
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
 
-                        sh '''
-                            cd main
-                            mvn com.google.cloud.tools:jib-maven-plugin:build -Drevision=${revision} -Dsha1=${commitId}
-                        '''
+                        container('build-container') {
+                            sh '''
+                                cd main
+                                mvn com.google.cloud.tools:jib-maven-plugin:build -Drevision=${revision} -Dsha1=${commitId}
+                            '''
 
-                        sh "mvn deploy:deploy -Drevision=${revision} -Dsha1=${commitId}"
-                        sh("git tag -a ${revision} -m 'Jenkins'")
-
-                        sshagent(credentials: ['github-secret']) {
-                          sh("git push origin --tags")
+                            sh "mvn deploy:deploy -Drevision=${revision} -Dsha1=${commitId}"
                         }
-                    }
 
+                    } // withCredentials
+
+                    sh("git tag -a ${revision} -m 'Jenkins'")
+
+                    sshagent(credentials: ['github-secret']) {
+                        sh("git push origin --tags")
+                    }
                 }
             }
         }
