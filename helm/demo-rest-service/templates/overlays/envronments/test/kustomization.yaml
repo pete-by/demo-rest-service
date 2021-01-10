@@ -7,6 +7,7 @@ resources: # deprecated in standalone Kustomize since v3, use resources
 components:
   - ../../shared/readiness
   - ../../shared/liveness
+  - ../../shared/load-balancer
 
 patchesStrategicMerge:
   - env.yaml
