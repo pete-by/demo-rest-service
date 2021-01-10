@@ -43,10 +43,11 @@ pipeline {
                                                 passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
                     container('build-container') {
                         script {
-
+                            // get HEAD revision hash
                             commitId = sh returnStdout: true, script: 'git rev-parse --short HEAD'
                             def commitRevision
                             try {
+                               // get a release version (revision) if it is associated with the commit
                                commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || echo ''"
                                commitRevision = commitRevision.trim() // to trim new lines
                             } catch(Exception e) {
@@ -54,8 +55,8 @@ pipeline {
                             }
 
                             if (commitRevision?.trim()) {
-                                sameRevision = true
-                                revision = commitRevision; // reuse the revision number of this commit to avoid patch increment
+                                sameRevision = true  // we should not increment release version and try to put a tag again
+                                revision = commitRevision; // reuse the revision number
                             } else {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
                             }
@@ -85,7 +86,7 @@ pipeline {
                                      usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
 
                         container('build-container') {
-                            sh "mvn deploy -PdeployToArtifactory,staging,dcr -Drevision=${revision} -Dsha1=${commitId}"
+                            sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=${revision} -Dsha1=${commitId}"
                         }
 
                     } // withCredentials

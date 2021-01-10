@@ -3,7 +3,7 @@ kind: Service
 metadata:
   namespace: {{ .Values.namespace }}
   labels:
-    app.kubernetes.io/version: {{ .Values.appVersion }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion }}
     app: {{ .Values.appName }}
   name: {{ .Values.appName }}
 spec:

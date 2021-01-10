@@ -45,13 +45,9 @@
         </profile>
 
 		<profile>
-			<id>staging</id>
+			<id>deployToHelmRepo</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
-				<property>
-					<name>env</name>
-					<value>staging</value>
-				</property>
 			</activation>
 			<build>
 				<plugins>
@@ -79,14 +75,14 @@
 						</configuration>
 						<executions>
 							<execution>
-								<id>package.${env}</id>
+								<id>package</id>
 								<goals>
 									<goal>package</goal>
 								</goals>
 								<phase>package</phase>
 							</execution>
 							<execution>
-								<id>upload.${env}</id>
+								<id>upload</id>
 								<goals>
 									<goal>upload</goal>
 								</goals>
@@ -158,7 +154,6 @@
 			    Note: currently uses Helm binary through system path
 			-->
             <!-- Used to render helm templates for Kustomize -->
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -173,7 +168,7 @@
                 </executions-->
                 <configuration>
                     <executable>helm</executable>
-                    <workingDirectory>${outputDirectory}/${chart.name}</workingDirectory>
+                    <workingDirectory>${project.basedir}/${chart.name}</workingDirectory>
                     <arguments>
                         <argument>template</argument>
                         <argument> --debug</argument>
@@ -183,8 +178,6 @@
                     </arguments>
                 </configuration>
             </plugin>
-
-
         </plugins>
 
     </build>

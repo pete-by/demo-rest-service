@@ -12,10 +12,14 @@ deploy:
   kustomize:
     paths: ["k8s/kustomize/templates/base"]
 profiles:
-  - name: test
+  - name: local
     deploy:
       kustomize:
-        paths: [ "k8s/kustomize/templates/overlays/test" ]
+        paths: [ "k8s/demo-rest-service/templates/base" ]
+  - name: dev
+    deploy:
+      kustomize:
+        paths: [ "k8s/demo-rest-service/templates/overlays/environments/dev" ]
 # Port forwarding section is optional
 portForward:
   - resourceType: service
