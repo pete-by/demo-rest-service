@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   namespace: {{ .Values.namespace }}
   labels:
-    app.kubernetes.io/version: {{ $.Chart.AppVersion }}
+    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
     app: {{ .Values.appName }}
   name: {{ .Values.appName }}
 spec:
@@ -43,7 +43,7 @@ spec:
             cpu: 1
           requests:
             memory: 300Mi
-            cpu: 500m
+            cpu: 200m
       restartPolicy: Always
       terminationGracePeriodSeconds: 15
       # The secret data is exposed to Containers in the Pod through a Volume.

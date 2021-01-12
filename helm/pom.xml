@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.axamit.springboot</groupId>
         <artifactId>demo-rest-service-parent</artifactId>
-        <version>${revision}+${sha1}</version>
+        <version>${revision}-${sha1}</version>
     </parent>
     <artifactId>demo-rest-service-chart</artifactId>
     <packaging>helm</packaging>

@@ -8,6 +8,6 @@ components:
   - ../../shared/readiness
   - ../../shared/liveness
   - ../../shared/load-balancer
-  -
+
 patchesStrategicMerge:
   - env.yaml

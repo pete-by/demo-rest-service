@@ -11,7 +11,7 @@
 
 	<groupId>com.axamit.springboot</groupId>
 	<artifactId>demo-rest-service-parent</artifactId>
-	<version>${revision}+${sha1}</version>
+	<version>${revision}-${sha1}</version>
 	<packaging>pom</packaging>
 	<name>Demo Rest Service</name>
 	<description>Demo project for Spring Boot Rest Service with Kubernetes</description>
@@ -21,6 +21,9 @@
 		<revision>1.0.0</revision>
 		<sha1>local</sha1> <!-- should be overrode by build agent -->
 		<java.version>11</java.version>
+		<maven.repo.base>https://axamit.jfrog.io/artifactory/</maven.repo.base>
+		<maven.repo.dev>${maven.repo.base}/webteam-java-dev-local</maven.repo.dev>
+		<maven.repo.prod>${maven.repo.base}/webteam-java-prod-local</maven.repo.prod>
 	</properties>
 
 	<modules>
@@ -45,9 +48,9 @@
 			<distributionManagement>
 				<repository>
 					<uniqueVersion>true</uniqueVersion>
-					<id>axamit.webteam.staging</id>
+					<id>axamit.webteam.dev</id>
 					<name>Webteam Dev Repository</name>
-					<url>https://axamit.jfrog.io/artifactory/webteam-java-dev-local</url>
+					<url>${maven.repo.dev}</url>
 					<layout>default</layout>
 				</repository>
 			</distributionManagement>
