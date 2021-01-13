@@ -1,4 +1,4 @@
-//
+
 def getLatestRevisionFromGit() {
     def defaultRevision = '1.0.0'
     def latestRevision = sh returnStdout: true, script: "git describe --tags \"\$(git rev-list --tags=*.*.* --max-count=1 2> /dev/null)\" 2> /dev/null || echo ${defaultRevision}"
