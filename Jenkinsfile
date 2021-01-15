@@ -1,7 +1,7 @@
-// test
+
 def getLatestRevisionFromGit() {
     def defaultRevision = '1.0.0'
-    def latestRevision = sh returnStdout: true, script: "git describe --tags \"\$(git rev-list --tags=*.*.* --max-count=1 2> /dev/null)\" 2> /dev/null || echo ${defaultRevision}"
+    def latestRevision = sh returnStdout: true, script: "git describe --match=*.*.* --abbrev=0 2> /dev/null || echo ${defaultRevision}"
     latestRevision
 }
 
@@ -25,6 +25,7 @@ def nextRevisionFromGit(scope) {
 def revision
 def sameRevision = false
 def commitId
+def sha1
 
 pipeline {
     environment {
@@ -39,20 +40,24 @@ pipeline {
         stage('Build') {
             steps {
 
+                echo "Jenkinsfile in feature1 is used"
+                echo "Running build on ${env.GIT_BRANCH}"
+
                 withCredentials([usernamePassword(credentialsId: 'artifactory-secret',
                                                 usernameVariable: 'ARTIFACTORY_STAGING_USERNAME',
                                                 passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
                     container('build-container') {
                         script {
                             // get HEAD revision hash
-                            commitId = sh returnStdout: true, script: 'git rev-parse --short HEAD'
+                            commitId = sh returnStdout: true, script: 'git rev-parse HEAD'
+                            sha1 = commitId.substring(0, 7)
                             def commitRevision
                             try {
                                // get a release version (revision) if it is associated with the commit
                                commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || echo ''"
                                commitRevision = commitRevision.trim() // to trim new lines
-                            } catch(Exception e) {
-                                // ignore
+                            } catch(err) {
+                                println(err.toString())
                             }
 
                             if (commitRevision?.trim()) {
@@ -61,7 +66,7 @@ pipeline {
                             } else {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
                             }
-                            sh "mvn clean compile -Drevision=${revision} -Dsha1=${commitId}"
+                            sh "mvn clean compile -Drevision=${revision} -Dsha1=${sha1}"
                         }
                     }
                 }
@@ -79,19 +84,20 @@ pipeline {
         stage('Deploy') {
 
             steps {
-                echo 'Deploying....'
+
+                echo 'Deploying artefacts to repositories....'
+
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_REGISTRY_USERNAME', passwordVariable: 'DOCKER_REGISTRY_PASSWORD'),
+                                 usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD'),
+                                 usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
+
+                    container('build-container') {
+                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=${revision} -Dsha1=${sha1}"
+                    }
+
+                } // withCredentials
+
                 script {
-
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_REGISTRY_USERNAME', passwordVariable: 'DOCKER_REGISTRY_PASSWORD'),
-                                     usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD'),
-                                     usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
-
-                        container('build-container') {
-                            sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=${revision} -Dsha1=${commitId}"
-                        }
-
-                    } // withCredentials
-
                     if(!sameRevision) { // only tag release and push if it there were changes
                         sshagent(credentials: ['github-secret']) {
                            sh """
@@ -100,8 +106,13 @@ pipeline {
                             """
                         }
                     }
+
+                    if(env.GIT_BRANCH.endsWith("/master")) {
+                        build job: "gke-deployment-pipeline", parameters: [string(name: 'REVISION', value: commitId)], wait: false
+                    }
                 }
             }
+
         }
     }
 }
