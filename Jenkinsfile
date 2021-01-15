@@ -40,6 +40,9 @@ pipeline {
         stage('Build') {
             steps {
 
+                echo "Jenkinsfile in master is used"
+                echo "Running build on ${env.GIT_BRANCH}"
+
                 withCredentials([usernamePassword(credentialsId: 'artifactory-secret',
                                                 usernameVariable: 'ARTIFACTORY_STAGING_USERNAME',
                                                 passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
