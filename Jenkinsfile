@@ -47,7 +47,7 @@ pipeline {
                         script {
                             // get HEAD revision hash
                             commitId = sh returnStdout: true, script: 'git rev-parse HEAD'
-                            sha1 = commit.subString(0, 7)
+                            sha1 = commitId.subString(0, 7)
                             def commitRevision
                             try {
                                // get a release version (revision) if it is associated with the commit
