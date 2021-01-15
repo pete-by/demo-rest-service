@@ -104,7 +104,7 @@ pipeline {
                         }
                     }
 
-                    if(env.BRANCH_NAME == "master") {
+                    if(env.GIT_BRANCH.endsWith("/master")) {
                         build job: "gke-deployment-pipeline", parameters: [string(name: 'REVISION', value: commitId)], wait: false
                     }
                 }
