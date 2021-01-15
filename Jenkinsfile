@@ -79,6 +79,7 @@ pipeline {
         stage('Deploy') {
 
             steps {
+
                 echo 'Deploying artefacts to repositories....'
 
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_REGISTRY_USERNAME', passwordVariable: 'DOCKER_REGISTRY_PASSWORD'),
@@ -91,17 +92,19 @@ pipeline {
 
                 } // withCredentials
 
-                if(!sameRevision) { // only tag release and push if it there were changes
-                    sshagent(credentials: ['github-secret']) {
-                       sh """
-                          git tag -a ${revision} -m 'Jenkins Build Agent'
-                          git push origin --tags
-                        """
+                script {
+                    if(!sameRevision) { // only tag release and push if it there were changes
+                        sshagent(credentials: ['github-secret']) {
+                           sh """
+                              git tag -a ${revision} -m 'Jenkins Build Agent'
+                              git push origin --tags
+                            """
+                        }
                     }
-                }
 
-                if(env.BRANCH_NAME == "master") {
-                    build job: "gke-deployment-pipeline", parameters: [string(name: 'REVISION', value: commitId)], wait: false
+                    if(env.BRANCH_NAME == "master") {
+                        build job: "gke-deployment-pipeline", parameters: [string(name: 'REVISION', value: commitId)], wait: false
+                    }
                 }
             }
 
