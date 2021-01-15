@@ -25,6 +25,7 @@ def nextRevisionFromGit(scope) {
 def revision
 def sameRevision = false
 def commitId
+def sha1
 
 pipeline {
     environment {
@@ -45,7 +46,8 @@ pipeline {
                     container('build-container') {
                         script {
                             // get HEAD revision hash
-                            commitId = sh returnStdout: true, script: 'git rev-parse --short HEAD'
+                            commitId = sh returnStdout: true, script: 'git rev-parse HEAD'
+                            sha1 = commit.subString(0, 7)
                             def commitRevision
                             try {
                                // get a release version (revision) if it is associated with the commit
@@ -61,7 +63,7 @@ pipeline {
                             } else {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
                             }
-                            sh "mvn clean compile -Drevision=${revision} -Dsha1=${commitId}"
+                            sh "mvn clean compile -Drevision=${revision} -Dsha1=${sha1}"
                         }
                     }
                 }
@@ -87,7 +89,7 @@ pipeline {
                                  usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
 
                     container('build-container') {
-                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=${revision} -Dsha1=${commitId}"
+                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=${revision} -Dsha1=${sha1}"
                     }
 
                 } // withCredentials
