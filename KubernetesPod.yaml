@@ -5,6 +5,8 @@ metadata:
 spec:
   securityContext:
     fsGroup: 1000
+    runAsUser: 1000
+    runAsGroup: 1000
   volumes:
     - name: maven-repo-pv
       persistentVolumeClaim:
@@ -14,15 +16,8 @@ spec:
       env:
         - name: CONTAINER_ENV_VAR
           value: jnlp
-      securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
     - name: build-container
       image: docker.io/peteby/build-container:2.0.1
-      securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
-        runAsGroup: 1000
       tty: true
       command: ["cat"]
       env:
