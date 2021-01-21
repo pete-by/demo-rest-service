@@ -81,6 +81,7 @@
                     <to>
                         <image>${image.path}</image>
                         <tags>
+                            <tag>${project.version}</tag>
                             <tag>${sha1}</tag>
                         </tags>
                         <auth>
