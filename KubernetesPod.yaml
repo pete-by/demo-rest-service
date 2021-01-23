@@ -16,6 +16,10 @@ spec:
       env:
         - name: CONTAINER_ENV_VAR
           value: jnlp
+      volumeMounts:
+        - mountPath: "/home/jenkins/.m2"
+          name: maven-repo-pv
+          readOnly: false
     - name: build-container
       image: docker.io/peteby/build-container:2.0.1
       tty: true
