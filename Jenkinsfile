@@ -99,7 +99,7 @@ pipeline {
 
                 script {
                     if(!sameRevision) { // only tag release and push if it there were changes
-                        sshagent(credentials: ['github-secret']) {
+                        sshagent(credentials: ['github-ssh-secret']) {
                            sh """
                               git tag -a ${revision} -m 'Jenkins Build Agent'
                               git push origin --tags
