@@ -31,5 +31,9 @@ spec:
         - mountPath: "/home/jenkins/.m2"
           name: maven-repo-pv
           readOnly: false
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
   imagePullSecrets:
     - name: regcred
