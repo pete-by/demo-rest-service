@@ -140,6 +140,7 @@ pipeline {
                                git commit -m "Created a release info for ${appVersion}"
                                git push -u origin ${version}
                             """
+
                         }
 
                     }
