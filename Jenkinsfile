@@ -122,6 +122,10 @@ pipeline {
                                        userRemoteConfigs: [[credentialsId: 'github-ssh-secret',
                                        url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
 
+                            sh """
+                               git checkout -b ${appVersion}
+                            """
+
                             echo 'Preparing release info'
                             def releaseInfo = [ version: appVersion, stage: 'dev',
                                                 vcs: [revision: commitId, url: appGitRepo],
@@ -140,7 +144,7 @@ pipeline {
                                git commit -m "Created a release info for ${appVersion}"
                                ls -la
                                git status
-                               git push origin HEAD:${appVersion}
+                               git push -u origin ${appVersion}
                             """
 
                         }
