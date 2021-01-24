@@ -117,17 +117,24 @@ pipeline {
 
                         sh "mkdir gke-deployment-pipeline" // create a target folder for checkout
                         dir('gke-deployment-pipeline') {
+
                             checkout([$class: 'GitSCM', branches: [[name: '*/master']],
                                        userRemoteConfigs: [[credentialsId: 'github-ssh-secret',
                                        url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
 
-                            writeReleaseInfo([
-                                version: appVersion, stage: 'dev',
-                                vcs: [revision: commitId, url: appGitRepo],
-                                modules: [[name: appName,
-                                artifacts: [name: appName + "-chart", type: "helm", sha1: "TODO", md5: "TODO"]]]
-                            ]);
+                            echo 'Preparing release info'
+                            def releaseInfo = [ version: appVersion, stage: 'dev',
+                                                vcs: [revision: commitId, url: appGitRepo],
+                                                modules: [[
+                                                    name: appName,
+                                                    artifacts: [name: appName + "-chart", type: "helm", sha1: "TODO", md5: "TODO"]
+                                                ]]
+                                              ]
 
+                            echo 'Writing release info'
+                            writeReleaseInfo(releaseInfo);
+
+                            echo 'Pushing release info'
                             sh """
                                git add release-info.yaml
                                git commit -m "Created a release info for ${appVersion}"
