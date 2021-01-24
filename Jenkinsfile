@@ -27,6 +27,7 @@ def writeReleaseInfo(info) {
   writeYaml file: 'release-info.yaml', data: releaseInfo
 }
 
+def GITHUB_SSH_SECRET = 'github-ssh-secret'
 def revision
 def sameRevision = false
 def commitId
@@ -108,7 +109,8 @@ pipeline {
 
                 script {
                     if(!sameRevision) { // only tag release and push if it there were changes
-                        sshagent(credentials: ['github-ssh-secret']) {
+
+                        sshagent(credentials: [GITHUB_SSH_SECRET]) {
                            sh """
                               git tag -a $revision -m 'Jenkins Build Agent'
                               git push origin --tags
@@ -119,7 +121,7 @@ pipeline {
                         dir('gke-deployment-pipeline') {
 
                             checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-                                       userRemoteConfigs: [[credentialsId: 'github-ssh-secret',
+                                       userRemoteConfigs: [[credentialsId: GITHUB_SSH_SECRET,
                                        url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
 
                             sh """
@@ -139,7 +141,7 @@ pipeline {
                             writeReleaseInfo(releaseInfo);
 
                             echo 'Pushing release info'
-                            sshagent(credentials: ['github-ssh-secret']) {
+                            sshagent(credentials: [GITHUB_SSH_SECRET]) {
                                 sh """
                                    git add release-info.yaml
                                    git commit -m "Created a release info for $appVersion"
