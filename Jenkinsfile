@@ -22,10 +22,18 @@ def nextRevisionFromGit(scope) {
     nextRevision
 }
 
+def writeReleaseInfo(info) {
+  def releaseInfo = info.toMapString()
+  writeYaml file: 'release-info.yaml', data: releaseInfo
+}
+
 def revision
 def sameRevision = false
 def commitId
 def sha1
+def appName = "demo-rest-service"
+def appGitRepo = "git@github.com:pete-by/demo-rest-service.git"
+def appVersion
 
 pipeline {
     environment {
@@ -66,6 +74,7 @@ pipeline {
                             } else {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
                             }
+                            appVersion = revision + "-" + sha1
                             sh "mvn clean compile -Drevision=${revision} -Dsha1=${sha1}"
                         }
                     }
@@ -103,12 +112,30 @@ pipeline {
                            sh """
                               git tag -a ${revision} -m 'Jenkins Build Agent'
                               git push origin --tags
-                            """
+                           """
                         }
-                    }
 
-                    if(env.GIT_BRANCH.endsWith("/master")) {
-                        build job: "gke-deployment-pipeline", parameters: [string(name: 'REVISION', value: commitId)], wait: false
+                        sh "mkdir gke-deployment-pipeline" // create a target folder for checkout
+                        dir('gke-deployment-pipeline') {
+                            checkout([$class: 'GitSCM', branches: [[name: '*/master']],
+                                       userRemoteConfigs: [[credentialsId: 'github-ssh-secret',
+                                       url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
+
+                            writeReleaseInfo([
+                                version: appVersion, stage: 'dev',
+                                vcs: [revision: commitId, url: appGitRepo],
+                                modules: [[name: appName,
+                                artifacts: [name: appName + "-chart", type: "helm", sha1: "TODO", md5: "TODO"]]]
+                            ]);
+
+                            sh """
+                               git add release-info.yaml
+                               git commit -m "Created a release info for ${appVersion}"
+                               git push -u origin ${version}
+                            """
+
+                        }
+
                     }
                 }
             }
