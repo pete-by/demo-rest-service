@@ -139,7 +139,6 @@ pipeline {
                             echo 'Preparing release info'
                             def releaseInfo = [ version: appVersion,
                                                 vcs: [revision: commitId, url: appGitRepo],
-                                                approved: true,
                                                 modules: [[
                                                     name: appName,
                                                     artifacts: [name: appName + "-chart", type: "helm", sha1: "TODO", md5: "TODO"]
