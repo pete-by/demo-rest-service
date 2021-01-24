@@ -26,7 +26,7 @@ def nextRevisionFromGit(scope) {
 
 def writeReleaseInfo(info) {
   def releaseInfo = info
-  writeYaml file: 'release-info.yaml', data: releaseInfo
+  writeYaml file: 'release-info.yaml', data: releaseInfo, overwrite: true
 }
 
 def GITHUB_SSH_SECRET = 'github-ssh-secret'
