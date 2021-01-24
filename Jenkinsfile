@@ -23,7 +23,7 @@ def nextRevisionFromGit(scope) {
 }
 
 def writeReleaseInfo(info) {
-  def releaseInfo = info.toMapString()
+  def releaseInfo = info
   writeYaml file: 'release-info.yaml', data: releaseInfo
 }
 
@@ -62,7 +62,7 @@ pipeline {
                             def commitRevision
                             try {
                                // get a release version (revision) if it is associated with the commit
-                               commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags ${commitId} 2> /dev/null || echo ''"
+                               commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags $commitId 2> /dev/null || echo ''"
                                commitRevision = commitRevision.trim() // to trim new lines
                             } catch(err) {
                                 println(err.toString())
@@ -75,7 +75,7 @@ pipeline {
                                 revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
                             }
                             appVersion = revision + "-" + sha1
-                            sh "mvn clean compile -Drevision=${revision} -Dsha1=${sha1}"
+                            sh "mvn clean compile -Drevision=$revision -Dsha1=$sha1"
                         }
                     }
                 }
@@ -101,7 +101,7 @@ pipeline {
                                  usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
 
                     container('build-container') {
-                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=${revision} -Dsha1=${sha1}"
+                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=$revision -Dsha1=$sha1"
                     }
 
                 } // withCredentials
@@ -110,7 +110,7 @@ pipeline {
                     if(!sameRevision) { // only tag release and push if it there were changes
                         sshagent(credentials: ['github-ssh-secret']) {
                            sh """
-                              git tag -a ${revision} -m 'Jenkins Build Agent'
+                              git tag -a $revision -m 'Jenkins Build Agent'
                               git push origin --tags
                            """
                         }
@@ -123,7 +123,7 @@ pipeline {
                                        url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
 
                             sh """
-                               git checkout -b ${appVersion}
+                               git checkout -b $appVersion
                             """
 
                             echo 'Preparing release info'
@@ -142,8 +142,8 @@ pipeline {
                             sshagent(credentials: ['github-ssh-secret']) {
                                 sh """
                                    git add release-info.yaml
-                                   git commit -m "Created a release info for ${appVersion}"
-                                   git push -u origin ${appVersion}
+                                   git commit -m "Created a release info for $appVersion"
+                                   git push -u origin $appVersion
                                 """
                             }
                         }
