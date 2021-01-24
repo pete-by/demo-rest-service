@@ -138,6 +138,8 @@ pipeline {
                             sh """
                                git add release-info.yaml
                                git commit -m "Created a release info for ${appVersion}"
+                               ls -la
+                               git status
                                git push origin HEAD:${appVersion}
                             """
 
