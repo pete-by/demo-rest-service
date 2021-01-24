@@ -28,6 +28,7 @@ def writeReleaseInfo(info) {
 }
 
 def GITHUB_SSH_SECRET = 'github-ssh-secret'
+def RELEASE_BRANCH_NAME = 'master'
 def revision
 def sameRevision = false
 def commitId
@@ -108,13 +109,17 @@ pipeline {
                 } // withCredentials
 
                 script {
-                    if(!sameRevision) { // only tag release and push if it there were changes
 
-                        sshagent(credentials: [GITHUB_SSH_SECRET]) {
-                           sh """
-                              git tag -a $revision -m 'Jenkins Build Agent'
-                              git push origin --tags
-                           """
+                    if(!sameRevision) { // only tag release and push if it there were changes, to avoid re-deployments
+
+                        // only tag releasable branch, not private or feature branches
+                        if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) {
+                            sshagent(credentials: [GITHUB_SSH_SECRET]) {
+                               sh """
+                                  git tag -a $revision -m 'Jenkins Build Agent'
+                                  git push origin --tags
+                               """
+                            }
                         }
 
                         sh "mkdir gke-deployment-pipeline" // create a target folder for checkout
@@ -123,13 +128,16 @@ pipeline {
                             checkout([$class: 'GitSCM', branches: [[name: '*/master']],
                                        userRemoteConfigs: [[credentialsId: GITHUB_SSH_SECRET,
                                        url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
-
+                            /*
+                             TODO: should we create a branch named after release (e.g. 2.1.0) while non-releasable
+                             branches after version (e.g. 2.1.0-j5o1we)
+                             */
                             sh """
                                git checkout -b $appVersion
                             """
 
                             echo 'Preparing release info'
-                            def releaseInfo = [ version: appVersion, stage: 'dev',
+                            def releaseInfo = [ version: appVersion,
                                                 vcs: [revision: commitId, url: appGitRepo],
                                                 modules: [[
                                                     name: appName,
@@ -142,11 +150,20 @@ pipeline {
 
                             echo 'Pushing release info'
                             sshagent(credentials: [GITHUB_SSH_SECRET]) {
+                                // commit release info
                                 sh """
                                    git add release-info.yaml
                                    git commit -m "Created a release info for $appVersion"
-                                   git push -u origin $appVersion
                                 """
+
+                                // only tag the branch which is release candidate
+                                if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) {
+                                    sh """
+                                        git tag -a $revision -m 'Jenkins Build Agent'
+                                    """
+                                }
+                                // atomically push the commit and tags
+                                sh "git push --atomic --tags -u origin $appVersion"
                             }
                         }
 
