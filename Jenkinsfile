@@ -139,14 +139,13 @@ pipeline {
                             writeReleaseInfo(releaseInfo);
 
                             echo 'Pushing release info'
-                            sh """
-                               git add release-info.yaml
-                               git commit -m "Created a release info for ${appVersion}"
-                               ls -la
-                               git status
-                               git push -u origin ${appVersion}
-                            """
-
+                            sshagent(credentials: ['github-ssh-secret']) {
+                                sh """
+                                   git add release-info.yaml
+                                   git commit -m "Created a release info for ${appVersion}"
+                                   git push -u origin ${appVersion}
+                                """
+                            }
                         }
 
                     }
