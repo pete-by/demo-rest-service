@@ -1,4 +1,6 @@
-
+/**
+ Get latest release number (revision) by finding latest release tag
+*/
 def getLatestRevisionFromGit() {
     def defaultRevision = '1.0.0'
     def latestRevision = sh returnStdout: true, script: "git describe --match=*.*.* --abbrev=0 2> /dev/null || echo ${defaultRevision}"
@@ -29,12 +31,14 @@ def writeReleaseInfo(info) {
 
 def GITHUB_SSH_SECRET = 'github-ssh-secret'
 def RELEASE_BRANCH_NAME = 'master'
+def releaseRevision
 def revision
 def sameRevision = false
 def commitId
 def sha1
 def appName = "demo-rest-service"
 def appGitRepo = "git@github.com:pete-by/demo-rest-service.git"
+def helmRepo = "https://axamit.jfrog.io/artifactory/helm-stable"
 def appVersion
 
 pipeline {
@@ -61,20 +65,23 @@ pipeline {
                             // get HEAD revision hash
                             commitId = sh returnStdout: true, script: 'git rev-parse HEAD'
                             sha1 = commitId.substring(0, 7)
-                            def commitRevision
                             try {
-                               // get a release version (revision) if it is associated with the commit
-                               commitRevision = sh returnStdout: true, script: "git describe --exact-match --tags $commitId 2> /dev/null || echo ''"
-                               commitRevision = commitRevision.trim() // to trim new lines
+                               // get a release number (revision) if it is associated with the current commit
+                               releaseRevision = sh returnStdout: true, script: "git describe --exact-match --tags $commitId 2> /dev/null || echo ''"
+                               releaseRevision = releaseRevision.trim() // to trim new lines
                             } catch(err) {
                                 println(err.toString())
                             }
 
-                            if (commitRevision?.trim()) {
-                                sameRevision = true  // we should not increment release version and try to put a tag again
-                                revision = commitRevision; // reuse the revision number
+                            if (releaseRevision?.trim()) {
+                                sameRevision = true  // we should not increment release version and try to put a tag again (will produce an error)
+                                revision = releaseRevision; // reuse the revision number from existing release tag
                             } else {
-                                revision = nextRevisionFromGit("patch") // TODO: determine from tag or commit message, by default patch
+                                if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) { // bump a new release revision if we are on releasable branch
+                                    revision = nextRevisionFromGit("patch") // TODO: determine element to increment from tag or commit message, by default patch
+                                } else {
+                                    revision = getLatestRevisionFromGit() // reuse last released revision
+                                }
                             }
                             appVersion = revision + "-" + sha1
                             sh "mvn clean compile -Drevision=$revision -Dsha1=$sha1"
@@ -130,18 +137,28 @@ pipeline {
                                        url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
                             /*
                              TODO: should we create a branch named after release (e.g. 2.1.0) while non-releasable
-                             branches after version (e.g. 2.1.0-j5o1we)
+                             branches after version (e.g. 2.1.0-j5o1we).
+                             Having branch names the same as tags considered a bad practice though
                              */
                             sh """
                                git checkout -b $appVersion
                             """
 
                             echo 'Preparing release info'
+                            // TODO: consider using maven task to create the release-info.yaml
+                            def helmChartFilename = appName + '-' + appVersion + '.tgz'
                             def releaseInfo = [ version: appVersion,
-                                                vcs: [revision: commitId, url: appGitRepo],
+                                                vcs: [revision: commitId,
+                                                      release: (env.BRANCH_NAME == RELEASE_BRANCH_NAME) ? revision : null,
+                                                      url: appGitRepo],
                                                 modules: [[
                                                     name: appName,
-                                                    artifacts: [name: appName + "-chart", type: "helm", sha1: "TODO", md5: "TODO"]
+                                                    artifacts: [
+                                                                [name: appName,
+                                                                 filename: helmChartFilename,
+                                                                 url: helmRepo + '/' + helmChartFilename,
+                                                                 type: "helm", sha1: "TODO", md5: "TODO"]
+                                                    ]
                                                 ]]
                                               ]
 
@@ -150,20 +167,12 @@ pipeline {
 
                             echo 'Pushing release info'
                             sshagent(credentials: [GITHUB_SSH_SECRET]) {
-                                // commit release info
+                                // commit release-info.yaml
                                 sh """
                                    git add release-info.yaml
-                                   git commit -m "Created a release info for $appVersion"
+                                   git commit -m "Jenkins Build Agent: created a release-info.yaml for $appVersion"
+                                   git push --atomic -u origin $appVersion
                                 """
-
-                                // only tag the branch which is release candidate
-                                if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) {
-                                    sh """
-                                        git tag -a $revision -m 'Jenkins Build Agent'
-                                    """
-                                }
-                                // atomically push the commit and tags
-                                sh "git push --atomic --tags -u origin $appVersion"
                             }
                         }
 
