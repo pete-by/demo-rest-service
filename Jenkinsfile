@@ -79,9 +79,17 @@ pipeline {
                             } else {
                                 if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) { // bump a new release revision if we are on releasable branch
                                     revision = nextRevisionFromGit("patch") // TODO: determine element to increment from tag or commit message, by default patch
+                                    // only tag releasable branch, not private or feature branches
+                                    sshagent(credentials: [GITHUB_SSH_SECRET]) {
+                                       sh """
+                                          git tag -a $revision -m 'Jenkins Build Agent'
+                                          git push origin --tags
+                                       """
+                                    }
                                 } else {
                                     revision = getLatestRevisionFromGit() // reuse last released revision
                                 }
+
                             }
                             appVersion = revision + "-" + sha1
                             sh "mvn clean compile -Drevision=$revision -Dsha1=$sha1"
@@ -118,16 +126,6 @@ pipeline {
                 script {
 
                     if(!sameRevision) { // only tag release and push if it there were changes, to avoid re-deployments
-
-                        // only tag releasable branch, not private or feature branches
-                        if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) {
-                            sshagent(credentials: [GITHUB_SSH_SECRET]) {
-                               sh """
-                                  git tag -a $revision -m 'Jenkins Build Agent'
-                                  git push origin --tags
-                               """
-                            }
-                        }
 
                         sh "mkdir gke-deployment-pipeline" // create a target folder for checkout
                         dir('gke-deployment-pipeline') {
