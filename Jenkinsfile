@@ -57,41 +57,47 @@ pipeline {
                 echo "Jenkinsfile in master is used"
                 echo "Running build on ${env.GIT_BRANCH}"
 
+                // Determine target version
+                script {
+                    // get HEAD revision hash
+                    commitId = sh returnStdout: true, script: 'git rev-parse HEAD'
+                    sha1 = commitId.substring(0, 7)
+                    try {
+                       // get a release number (revision) if it is associated with the current commit
+                       releaseRevision = sh returnStdout: true, script: "git describe --exact-match --tags $commitId 2> /dev/null || echo ''"
+                       releaseRevision = releaseRevision.trim() // to trim new lines
+                    } catch(err) {
+                        println(err.toString())
+                    }
+
+                    if (releaseRevision?.trim()) {
+                        sameRevision = true  // we should not increment release version and try to put a tag again (will produce an error)
+                        revision = releaseRevision; // reuse the revision number from existing release tag
+                    } else {
+                        if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) { // bump a new release revision if we are on releasable branch
+                            revision = nextRevisionFromGit("patch") // TODO: determine element to increment from tag or commit message, by default patch
+                            // only tag releasable branch, not private or feature branches
+                            echo "Tagging the source with $revision tag"
+                            sshagent(credentials: [GITHUB_SSH_SECRET]) {
+                               sh """
+                                  git tag -a $revision -m 'Jenkins Build Agent'
+                                  git push origin --tags
+                               """
+                            }
+                        } else {
+                            revision = getLatestRevisionFromGit() // reuse last released revision
+                        }
+
+                    }
+                    appVersion = revision + "-" + sha1
+                }
+
+                // Run compile
                 withCredentials([usernamePassword(credentialsId: 'artifactory-secret',
                                                 usernameVariable: 'ARTIFACTORY_STAGING_USERNAME',
                                                 passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
                     container('build-container') {
                         script {
-                            // get HEAD revision hash
-                            commitId = sh returnStdout: true, script: 'git rev-parse HEAD'
-                            sha1 = commitId.substring(0, 7)
-                            try {
-                               // get a release number (revision) if it is associated with the current commit
-                               releaseRevision = sh returnStdout: true, script: "git describe --exact-match --tags $commitId 2> /dev/null || echo ''"
-                               releaseRevision = releaseRevision.trim() // to trim new lines
-                            } catch(err) {
-                                println(err.toString())
-                            }
-
-                            if (releaseRevision?.trim()) {
-                                sameRevision = true  // we should not increment release version and try to put a tag again (will produce an error)
-                                revision = releaseRevision; // reuse the revision number from existing release tag
-                            } else {
-                                if(env.BRANCH_NAME == RELEASE_BRANCH_NAME) { // bump a new release revision if we are on releasable branch
-                                    revision = nextRevisionFromGit("patch") // TODO: determine element to increment from tag or commit message, by default patch
-                                    // only tag releasable branch, not private or feature branches
-                                    sshagent(credentials: [GITHUB_SSH_SECRET]) {
-                                       sh """
-                                          git tag -a $revision -m 'Jenkins Build Agent'
-                                          git push origin --tags
-                                       """
-                                    }
-                                } else {
-                                    revision = getLatestRevisionFromGit() // reuse last released revision
-                                }
-
-                            }
-                            appVersion = revision + "-" + sha1
                             sh "mvn clean compile -Drevision=$revision -Dsha1=$sha1"
                         }
                     }
@@ -113,6 +119,7 @@ pipeline {
 
                 echo 'Deploying artefacts to repositories....'
 
+                // Publish artifacts
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-secret', usernameVariable: 'DOCKER_REGISTRY_USERNAME', passwordVariable: 'DOCKER_REGISTRY_PASSWORD'),
                                  usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'ARTIFACTORY_STAGING_USERNAME', passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD'),
                                  usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
