@@ -67,7 +67,7 @@ pipeline {
                        releaseRevision = sh returnStdout: true, script: "git describe --exact-match --tags $commitId 2> /dev/null || echo ''"
                        releaseRevision = releaseRevision.trim() // to trim new lines
                     } catch(err) {
-                        println(err.toString())
+                        println("Current commit is not tagged with a release tag")
                     }
 
                     if (releaseRevision?.trim()) {
@@ -87,7 +87,6 @@ pipeline {
                         } else {
                             revision = getLatestRevisionFromGit() // reuse last released revision
                         }
-
                     }
                     appVersion = revision + "-" + sha1
                 }
@@ -98,7 +97,7 @@ pipeline {
                                                 passwordVariable: 'ARTIFACTORY_STAGING_PASSWORD')]) {
                     container('build-container') {
                         script {
-                            sh "mvn clean compile -Drevision=$revision -Dsha1=$sha1"
+                            sh "mvn clean compile -Drevision=$revision -Dsha1=$sha1 -DskipTests=true"
                         }
                     }
                 }
@@ -125,7 +124,7 @@ pipeline {
                                  usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
 
                     container('build-container') {
-                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=$revision -Dsha1=$sha1"
+                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=$revision -Dsha1=$sha1 -DskipTests=true"
                     }
 
                 } // withCredentials
@@ -140,14 +139,8 @@ pipeline {
                             checkout([$class: 'GitSCM', branches: [[name: '*/master']],
                                        userRemoteConfigs: [[credentialsId: GITHUB_SSH_SECRET,
                                        url: 'git@github.com:pete-by/gke-deployment-pipeline.git']]])
-                            /*
-                             TODO: should we create a branch named after release (e.g. 2.1.0) while non-releasable
-                             branches after version (e.g. 2.1.0-j5o1we).
-                             Having branch names the same as tags considered a bad practice though
-                             */
-                            sh """
-                               git checkout -b $appVersion
-                            """
+
+                            sh "git checkout -b $appVersion"
 
                             echo 'Preparing release info'
                             // TODO: consider using maven task to create the release-info.yaml
