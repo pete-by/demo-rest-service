@@ -18,7 +18,7 @@ spec:
         app: {{ .Values.appName }}
     spec:
       containers:
-      - image: peteby/{{ .Values.appName }}
+      - image: peteby/{{ .Values.appName }}:{{ $.Chart.AppVersion }}
         name: {{ .Values.appName }}
         env:
           - name: env
