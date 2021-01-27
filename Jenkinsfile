@@ -108,7 +108,7 @@ pipeline {
             steps {
                 echo 'Testing...'
                 container('build-container') {
-                    sh 'mvn test'
+                    sh 'mvn test -Dmaven.gitcommitid.skip=true'
                 }
             }
         }
@@ -124,7 +124,7 @@ pipeline {
                                  usernamePassword(credentialsId: 'artifactory-secret', usernameVariable: 'HELM_STABLE_USERNAME', passwordVariable: 'HELM_STABLE_PASSWORD')]) {
 
                     container('build-container') {
-                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=$revision -Dsha1=$sha1 -DskipTests=true"
+                        sh "mvn deploy -PdeployToArtifactory,deployToHelmRepo,dcr -Drevision=$revision -Dsha1=$sha1 -DskipTests=true  -Dmaven.gitcommitid.skip=true"
                     }
 
                 } // withCredentials
