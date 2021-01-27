@@ -40,10 +40,10 @@ spec:
         resources:
           limits:
             memory: 500Mi
-            cpu: 1
+            cpu: 300m
           requests:
             memory: 300Mi
-            cpu: 200m
+            cpu: 100m
       restartPolicy: Always
       terminationGracePeriodSeconds: 15
       # The secret data is exposed to Containers in the Pod through a Volume.
