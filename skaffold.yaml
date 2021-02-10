@@ -8,14 +8,21 @@ build:
     context: .
     jib:
       project: com.axamit.springboot:demo-rest-service
+      type: maven
+      args:
+        - --no-transfer-progress
+        - -Psync
+      fromImage: gcr.io/distroless/java:11-debug
+    sync:
+      auto: true
 deploy:
   kustomize:
-    paths: ["k8s/kustomize/templates/base"]
+    paths: [ "k8s/demo-rest-service/templates/overlays/environments/local" ]
 profiles:
   - name: local
     deploy:
       kustomize:
-        paths: [ "k8s/demo-rest-service/templates/base" ]
+        paths: [ "k8s/demo-rest-service/templates/overlays/environments/local" ]
   - name: dev
     deploy:
       kustomize:

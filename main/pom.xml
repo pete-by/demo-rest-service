@@ -89,8 +89,9 @@
                             <password>${env.DOCKER_REGISTRY_PASSWORD}</password>
                         </auth>
                     </to>
+                    <!-- https://github.com/GoogleContainerTools/jib/issues/1029 -->
                     <container>
-                        <user>nobody:nobody</user> <!-- https://github.com/GoogleContainerTools/jib/issues/1029 -->
+                        <user>nobody:nobody</user>
                     </container>
                 </configuration>
                 <executions>

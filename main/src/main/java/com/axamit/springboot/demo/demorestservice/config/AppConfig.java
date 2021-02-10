@@ -1,6 +1,5 @@
 package com.axamit.springboot.demo.demorestservice.config;
 
-import com.axamit.springboot.demo.demorestservice.DemoRestServiceApplication;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
